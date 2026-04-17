@@ -11,7 +11,7 @@ if (!url) {
 }
 
 export const db = createClient({
-  url: url,
+  url: url.replace("libsql://", "https://"),
   authToken: authToken,
 });
 
