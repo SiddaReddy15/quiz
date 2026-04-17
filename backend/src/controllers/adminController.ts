@@ -93,11 +93,20 @@ export const getExams = async (req: AuthRequest, res: Response) => {
 };
 
 export const addQuestion = async (req: AuthRequest, res: Response) => {
-  const { 
-    exam_id, category_id, type, title, question_text, 
-    options, correct_answer, explanation, marks, 
-    difficulty, languages, starter_code, test_cases 
-  } = req.body;
+  console.log("[DEBUG] addQuestion request body:", JSON.stringify(req.body));
+  const exam_id = req.body.exam_id || req.body.examId;
+  const category_id = req.body.category_id || req.body.categoryId || req.body.category;
+  const type = req.body.type;
+  const title = req.body.title;
+  const question_text = req.body.question_text || req.body.questionText;
+  const options = req.body.options;
+  const correct_answer = req.body.correct_answer || req.body.correctAnswer;
+  const explanation = req.body.explanation;
+  const marks = req.body.marks || 1;
+  const difficulty = req.body.difficulty || 'MEDIUM';
+  const languages = req.body.languages || req.body.lang;
+  const starter_code = req.body.starter_code || req.body.starterCode;
+  const test_cases = req.body.test_cases || req.body.testCases;
 
   try {
     const id = generateId();
@@ -114,11 +123,11 @@ export const addQuestion = async (req: AuthRequest, res: Response) => {
         type, 
         title || null,
         question_text, 
-        typeof options === 'string' ? options : JSON.stringify(options), 
+        typeof options === 'string' ? options : JSON.stringify(options || []), 
         correct_answer || null, 
         explanation || null, 
-        marks || 1, 
-        difficulty || 'MEDIUM',
+        Number(marks), 
+        difficulty.toUpperCase(),
         languages ? JSON.stringify(languages) : null,
         starter_code || null,
         test_cases ? JSON.stringify(test_cases) : null
@@ -130,9 +139,12 @@ export const addQuestion = async (req: AuthRequest, res: Response) => {
     if (req.user) {
         await logActivity(req.user.id, "ADDED_QUESTION", `Added Question - ${question_text.substring(0, 30)}...`, "SUCCESS");
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+  } catch (error: any) {
+    console.error("CRITICAL ERROR in addQuestion:", error);
+    res.status(500).json({ 
+        message: "Internal server error", 
+        error: error.message
+    });
   }
 };
 

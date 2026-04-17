@@ -20,10 +20,11 @@ export default function ExamInterface() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["examData", attemptId],
     queryFn: () => studentApi.getAttemptQuestions(attemptId as string).then(res => res.data),
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    retry: 1
   });
 
   const saveMutation = useMutation({
@@ -116,6 +117,21 @@ export default function ExamInterface() {
     return `${h > 0 ? h + ":" : ""}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  if (isError) {
+    const errorData = (error as any)?.response?.data;
+    return (
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+            <AlertCircle size={48} className="text-red-500 mb-4" />
+            <h2 className="text-2xl font-black font-heading text-dark mb-2">Failed to Load</h2>
+            <p className="text-slate-500 font-medium max-w-md">
+                {errorData?.error || errorData?.message || "We encountered an error while assembling your assessment."}
+            </p>
+            {errorData?.detail && <p className="text-[10px] text-slate-400 mt-2 font-mono">{errorData.detail}</p>}
+            <button onClick={() => router.push("/student/exams")} className="mt-8 px-8 py-3 bg-brand-indigo text-white rounded-2xl font-black text-xs uppercase tracking-widest">Return to Assessments</button>
+        </div>
+    );
+  }
+
   if (isLoading || !data) {
     return (
         <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 gap-4">
@@ -125,17 +141,30 @@ export default function ExamInterface() {
     );
   }
 
-  const parseOptions = (optionsStr: string) => {
+  if (!data.questions || data.questions.length === 0) {
+    return (
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+            <AlertCircle size={48} className="text-amber-500 mb-4" />
+            <h2 className="text-2xl font-black font-heading text-dark mb-2">No Questions Found</h2>
+            <p className="text-slate-500 font-medium max-w-md">This assessment doesn't seem to have any questions. Please contact the administrator.</p>
+            <button onClick={() => router.push("/student/exams")} className="mt-8 px-8 py-3 bg-brand-indigo text-white rounded-2xl font-black text-xs uppercase tracking-widest">Return to Assessments</button>
+        </div>
+    );
+  }
+
+  const parseOptions = (optionsStr: any) => {
+    if (!optionsStr) return [];
+    if (Array.isArray(optionsStr)) return optionsStr;
     try {
         const parsed = JSON.parse(optionsStr);
         return Array.isArray(parsed) ? parsed : [optionsStr];
     } catch (e) {
-        return optionsStr.split(",").map(s => s.trim());
+        return String(optionsStr).split(",").map(s => s.trim());
     }
   };
 
   const currentQuestion = data.questions[currentIdx];
-  const options = currentQuestion?.options ? parseOptions(currentQuestion.options) : [];
+  const options = currentQuestion ? parseOptions(currentQuestion.options) : [];
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-body selection:bg-brand-indigo/20">
@@ -289,7 +318,9 @@ export default function ExamInterface() {
                                     <span className="text-sm font-black text-dark uppercase tracking-widest opacity-60">Coding Workspace</span>
                                 </div>
                                 <div className="flex gap-2">
-                                    {JSON.parse(currentQuestion.languages || '["javascript"]').map((lang: string) => (
+                                    {(typeof currentQuestion.languages === 'string' ? 
+                                        (currentQuestion.languages.startsWith('[') ? JSON.parse(currentQuestion.languages) : currentQuestion.languages.split(',').map((l: string) => l.trim())) : 
+                                        (currentQuestion.languages || ['javascript'])).map((lang: string) => (
                                         <span key={lang} className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black uppercase text-slate-500 border border-slate-200">{lang}</span>
                                     ))}
                                 </div>

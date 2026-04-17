@@ -153,7 +153,7 @@ export default function AvailableExams() {
                                 }`}
                             >
                                 {startMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <PlayCircle size={14} />}
-                                {isInProgress ? "Resume Exam" : "Start Now"}
+                                {isInProgress ? "Continue Assessment" : "Start Now"}
                             </button>
                         )}
                     </div>

@@ -96,10 +96,29 @@ async function seed() {
   try {
     // 0. Force Purge existing exams and attempts to ensure synchronization
     console.log("🧹 Purging existing assessments and attempts...");
+    await db.execute("PRAGMA foreign_keys = OFF");
     await db.execute("DELETE FROM answers");
     await db.execute("DELETE FROM attempts");
     await db.execute("DELETE FROM questions WHERE exam_id IS NOT NULL");
     await db.execute("DELETE FROM exams");
+    await db.execute("DELETE FROM users");
+    await db.execute("PRAGMA foreign_keys = ON");
+    
+    // 0. Seed Users
+    console.log("👥 Seeding default users...");
+    const bcrypt = require("bcryptjs");
+    const adminPassword = await bcrypt.hash("admin123", 10);
+    const studentPassword = await bcrypt.hash("student123", 10);
+
+    await db.execute({
+      sql: "INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
+      args: [generateId(), "Admin User", "admin@exampro.com", adminPassword, "ADMIN"]
+    });
+
+    await db.execute({
+      sql: "INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
+      args: [generateId(), "Student User", "student@exampro.com", studentPassword, "STUDENT"]
+    });
     
     // 1. Categories
     for (const cat of SECTORS) {
@@ -117,9 +136,9 @@ async function seed() {
         sql: "INSERT OR REPLACE INTO exams (id, title, duration, passing_score, is_published, category_id) VALUES (?, ?, ?, ?, 1, ?)",
         args: [examId, exam.title, exam.duration, exam.passing, exam.category]
       });
-      console.log(`✅ Exam seeded: ${exam.title}`);
+      console.log(`✅ Exam seeded: ${exam.title} (${examId})`);
       
-      // Seed 5 random questions for each exam
+      // Seed questions for each exam
       const categoryQuestions = QUESTIONS.filter(q => q.category === exam.category);
       for (const q of categoryQuestions) {
         const qId = generateId();
@@ -143,6 +162,7 @@ async function seed() {
           ]
         });
       }
+      console.log(`   └─ Seeded ${categoryQuestions.length} questions for ${exam.title}`);
     }
 
     console.log("✨ Seed completed successfully.");

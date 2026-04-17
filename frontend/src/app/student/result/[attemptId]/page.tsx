@@ -15,10 +15,22 @@ export default function ExamResult() {
   const { attemptId } = useParams();
   const router = useRouter();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["examResult", attemptId],
     queryFn: () => studentApi.getResult(attemptId as string).then(res => res.data),
+    retry: 1
   });
+
+  if (isError) {
+    return (
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+            <XCircle size={48} className="text-red-500 mb-4" />
+            <h2 className="text-2xl font-black font-heading text-dark mb-2">Report Unavailable</h2>
+            <p className="text-slate-500 font-medium max-w-md">{(error as any)?.response?.data?.message || "We encountered an error while retrieving your assessment report. Please try again later."}</p>
+            <button onClick={() => router.push("/student/dashboard")} className="mt-8 px-8 py-3 bg-brand-indigo text-white rounded-2xl font-black text-xs uppercase tracking-widest">Return to Dashboard</button>
+        </div>
+    );
+  }
 
   if (isLoading || !data) {
     return (

@@ -10,11 +10,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Loader2, GraduationCap, Mail, Lock, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login, user, loading: authLoading } = useAuth();
@@ -33,15 +36,20 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: ""
+    }
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     setError("");
     try {
       await login(data.email, data.password);
+      toast.success("Welcome back!");
       // redirection is handled by the useEffect above once user state updates
     } catch (err: any) {
       setError(
@@ -122,7 +130,13 @@ export default function LoginPage() {
                 {errors.password ? (
                   <p className="text-red-500 text-xs font-bold">{errors.password.message as string}</p>
                 ) : <div />}
-                <Link href="#" className="text-xs font-bold text-brand-indigo hover:underline">Forgot password?</Link>
+                <button 
+                  type="button"
+                  onClick={() => toast.info("Please contact your administrator to reset your password.")}
+                  className="text-xs font-bold text-brand-indigo hover:underline"
+                >
+                  Forgot password?
+                </button>
               </div>
             </div>
 

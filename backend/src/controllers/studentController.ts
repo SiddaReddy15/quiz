@@ -112,9 +112,13 @@ export const startAttempt = async (req: AuthRequest, res: Response) => {
             const title = exam.rows[0]?.title || "Unknown Exam";
             await logActivity(req.user.id, "STARTED_ATTEMPT", `Started Attempt - ${title}`, "SUCCESS");
         }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
+    } catch (error: any) {
+        console.error("CRITICAL ERROR in startAttempt:", error);
+        res.status(500).json({ 
+            message: "Internal server error", 
+            error: error.message,
+            detail: error.message?.includes("FOREIGN KEY") ? "User session out of sync. Please logout and login again." : undefined
+        });
     }
 };
 
@@ -172,7 +176,7 @@ export const submitAttempt = async (req: AuthRequest, res: Response) => {
 
         // Get the exam and its category
         const exam = await db.execute({
-            sql: "SELECT category_id, pass_mark FROM exams WHERE id = ?",
+            sql: "SELECT category_id, passing_score FROM exams WHERE id = ?",
             args: [examId]
         });
         const categoryId = exam.rows[0]?.category_id;
@@ -221,13 +225,15 @@ export const submitAttempt = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        const passMark = Number(exam.rows[0]?.pass_mark || 40);
+        const passMark = Number(exam.rows[0]?.passing_score || 40);
         const percentage = totalPossible > 0 ? (totalScore / totalPossible) * 100 : 0;
         const status = percentage >= passMark ? 'PASSED' : 'FAILED';
 
+        const roundedPercentage = Math.round(percentage);
+
         await db.execute({
             sql: "UPDATE attempts SET status = 'SUBMITTED', submit_time = CURRENT_TIMESTAMP, score = ? WHERE id = ?",
-            args: [totalScore, attempt_id]
+            args: [roundedPercentage, attempt_id]
         });
 
         res.json({ 
@@ -287,7 +293,7 @@ export const getAttemptQuestions = async (req: AuthRequest, res: Response) => {
     const { attemptId } = req.params;
     try {
         const attemptRes = await db.execute({
-            sql: "SELECT exam_id, status FROM attempts WHERE id = ?",
+            sql: "SELECT exam_id, status, start_time FROM attempts WHERE id = ?",
             args: [attemptId]
         });
 
@@ -301,22 +307,34 @@ export const getAttemptQuestions = async (req: AuthRequest, res: Response) => {
             args: [examId]
         });
 
-        const categoryId = exam.rows[0]?.category_id;
+        if (exam.rows.length === 0) return res.status(404).json({ message: "Exam not found" });
 
-        const startTime = new Date(String(attemptRes.rows[0].start_time));
-        const durationMinutes = Number(exam.rows[0].duration || 0);
-        const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
-        const now = new Date();
-        const remainingSeconds = Math.max(0, Math.floor((endTime.getTime() - now.getTime()) / 1000));
+        const categoryId = exam.rows[0].category_id;
 
+        let remainingSeconds = 0;
+        try {
+            const startTimeStr = String(attemptRes.rows[0].start_time).replace(' ', 'T') + (String(attemptRes.rows[0].start_time).includes('T') ? '' : 'Z');
+            const startTime = new Date(startTimeStr);
+            const durationMinutes = Number(exam.rows[0].duration || 0);
+            const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+            const now = new Date();
+            remainingSeconds = Math.max(0, Math.floor((endTime.getTime() - now.getTime()) / 1000));
+        } catch (timerError) {
+            console.error("Timer calculation error:", timerError);
+            remainingSeconds = 3600; // Default to 1 hour if calculation fails
+        }
+
+        console.log(`[DEBUG] Attempt ID: ${attemptId} -> Exam ID: ${examId}, Category ID: ${categoryId}`);
+        
         const questions = await db.execute({
-            sql: `
-                SELECT id, type, question_text, options, marks, difficulty, title, languages, starter_code, constraints, test_cases 
-                FROM questions 
-                WHERE exam_id = ? OR category_id = ? 
-            `,
-            args: [examId, categoryId]
+            sql: "SELECT * FROM questions WHERE exam_id = ? OR category_id = ?",
+            args: [examId, categoryId || '']
         });
+        
+        console.log(`[DEBUG] Found ${questions.rows.length} questions for this assessment.`);
+        if (questions.rows.length === 0) {
+            console.warn(`[WARN] No questions found for exam_id=${examId} or category_id=${categoryId}`);
+        }
 
         // Get existing answers to resume
         const answers = await db.execute({
@@ -324,12 +342,37 @@ export const getAttemptQuestions = async (req: AuthRequest, res: Response) => {
             args: [attemptId]
         });
 
-        const parsedQuestions = questions.rows.map((q: any) => ({
-            ...q,
-            options: typeof q.options === 'string' ? JSON.parse(q.options || '[]') : q.options,
-            languages: typeof q.languages === 'string' ? JSON.parse(q.languages || '[]') : q.languages,
-            test_cases: typeof q.test_cases === 'string' ? JSON.parse(q.test_cases || '[]') : q.test_cases
-        }));
+        const parsedQuestions = questions.rows.map((q: any) => {
+            let parsedOptions = [];
+            let parsedLanguages = [];
+            let parsedTestCases = [];
+
+            try {
+                parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options || '[]') : (q.options || []);
+            } catch (e) {
+                console.error(`Error parsing options for question ${q.id}:`, e);
+                parsedOptions = String(q.options || '').split(',').map((s: string) => s.trim());
+            }
+
+            try {
+                parsedLanguages = typeof q.languages === 'string' ? JSON.parse(q.languages || '[]') : (q.languages || []);
+            } catch (e) {
+                parsedLanguages = ["javascript"];
+            }
+
+            try {
+                parsedTestCases = typeof q.test_cases === 'string' ? JSON.parse(q.test_cases || '[]') : (q.test_cases || []);
+            } catch (e) {
+                parsedTestCases = [];
+            }
+
+            return {
+                ...q,
+                options: parsedOptions,
+                languages: parsedLanguages,
+                test_cases: parsedTestCases
+            };
+        });
 
         res.json({
             exam: exam.rows[0],
@@ -337,9 +380,13 @@ export const getAttemptQuestions = async (req: AuthRequest, res: Response) => {
             answers: answers.rows,
             remaining_seconds: remainingSeconds
         });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
+    } catch (error: any) {
+        console.error("CRITICAL ERROR in getAttemptQuestions:", error);
+        res.status(500).json({ 
+            message: "Internal server error", 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+        });
     }
 };
 

@@ -55,20 +55,22 @@ export default function CreateQuestionPage() {
         if (!questionText.trim()) return toast.error("Question text is required");
         
         const payload: any = {
-            category: category as string, // Extract from URL params
+            category_id: category as string, 
             type,
-            questionText: questionText,
+            question_text: questionText,
             marks: Number(marks),
             difficulty,
+            explanation,
         };
 
         if (type === "MCQ") {
             if (options.some(opt => !opt.trim())) return toast.error("All options must be filled");
             if (!correctAnswer) return toast.error("Please select the correct answer");
-            payload.options = options; // Send as array object
-            payload.correctAnswer = correctAnswer;
+            payload.options = options; 
+            payload.correct_answer = correctAnswer;
         } else {
-            payload.testCases = testCases ? JSON.parse(testCases) : null;
+            payload.starter_code = starterCode;
+            payload.test_cases = testCases ? JSON.parse(testCases) : null;
         }
 
         mutation.mutate(payload);

@@ -9,6 +9,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { Loader2, GraduationCap, Mail, Lock, User, ArrowLeft, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -17,23 +19,42 @@ const registerSchema = z.object({
   role: z.enum(["STUDENT", "ADMIN"]),
 });
 
+type RegisterFormData = z.infer<typeof registerSchema>;
+
 export default function RegisterPage() {
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, user } = useAuth();
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  // If already logged in, redirect
+  useEffect(() => {
+    if (user) {
+      if (user.role === "ADMIN") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/student/dashboard");
+      }
+    }
+  }, [user, router]);
+
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: "STUDENT" },
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      role: "STUDENT"
+    },
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: RegisterFormData) => {
     setLoading(true);
     setError("");
     try {
       await registerUser(data.name, data.email, data.password, data.role);
-      router.push("/login");
+      toast.success("Account created successfully! Welcome to ExamPro.");
+      // redirection is handled by the useEffect once user state updates
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
@@ -47,7 +68,7 @@ export default function RegisterPage() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-indigo/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-purple/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-lg relative z-10"
@@ -59,12 +80,15 @@ export default function RegisterPage() {
 
         <div className="bg-white rounded-[40px] shadow-2xl shadow-slate-200/50 border border-border p-10">
           <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-gradient rounded-2xl text-white mb-6 shadow-xl shadow-brand-indigo/20">
+              <GraduationCap size={32} />
+            </div>
             <h1 className="text-4xl font-heading font-extrabold tracking-tight mb-2">Create Account</h1>
             <p className="text-muted-foreground font-body text-sm">Join ExamPro to start assessing or learning.</p>
           </div>
 
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl mb-6 text-sm font-medium flex items-center gap-2"

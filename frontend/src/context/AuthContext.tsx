@@ -60,12 +60,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (name: string, email: string, password: string, role: string) => {
-    await axios.post(`${API_URL}/auth/register`, {
+    const res = await axios.post(`${API_URL}/auth/register`, {
       name,
       email,
       password,
       role,
     });
+
+    const { token, user } = res.data;
+
+    setToken(token);
+    setUser(user);
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+    document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
+
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   };
 
   const logout = () => {

@@ -27,7 +27,22 @@ export const register = async (req: Request, res: Response) => {
       args: [userId, name, email, hashedPassword, role || "STUDENT"],
     });
 
-    res.status(201).json({ message: "User registered successfully" });
+    const token = jwt.sign(
+      { id: userId, role: role || "STUDENT" },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.status(201).json({ 
+      message: "User registered successfully",
+      token,
+      user: {
+        id: userId,
+        name,
+        email,
+        role: role || "STUDENT",
+      }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

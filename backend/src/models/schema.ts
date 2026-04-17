@@ -84,9 +84,12 @@ export const initDB = async () => {
         id TEXT PRIMARY KEY,
         attempt_id TEXT REFERENCES attempts(id) ON DELETE CASCADE,
         question_id TEXT REFERENCES questions(id) ON DELETE CASCADE,
-        answer TEXT,
+        selected_option TEXT,
+        answer_text TEXT,
+        code_content TEXT,
         is_correct BOOLEAN,
-        marks_awarded INTEGER DEFAULT 0
+        marks_awarded INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
