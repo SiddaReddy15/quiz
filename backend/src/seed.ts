@@ -5,7 +5,7 @@ const SECTORS = [
   { slug: "frontend", name: "Frontend Development", description: "Modern UI & Logic (HTML, CSS, React, Next.js)" },
   { slug: "backend", name: "Backend Development", description: "APIs & Core Systems (Node, Express, Auth)" },
   { slug: "database", name: "Database Management", description: "Data Strategy & SQL (Prisma, Turso, PostgreSQL)" },
-  { slug: "devops", name: "DevOps & Cloud", description: "Scale & Deployment (Docker, AWS, CI/CD)" },
+  { slug: "devops", name: "Python Programming", description: "Advanced scripting & logic (Django, FastAPI, Data Science)" },
   { slug: "dsa", name: "DSA & Logic", description: "Problem Solving (Arrays, Trees, Algorithms)" }
 ];
 
@@ -13,7 +13,7 @@ const EXAMS = [
   { title: "Frontend Development", category: "frontend", duration: 60, passing: 70 },
   { title: "Backend Development", category: "backend", duration: 60, passing: 70 },
   { title: "Database Management", category: "database", duration: 45, passing: 65 },
-  { title: "DevOps & Cloud", category: "devops", duration: 45, passing: 60 },
+  { title: "Python Programming", category: "devops", duration: 45, passing: 60 },
   { title: "DSA & Logic", category: "dsa", duration: 90, passing: 75 },
 ];
 
@@ -61,19 +61,19 @@ const QUESTIONS = [
   { category: "database", type: "CODING", text: "Connect Prisma ORM to a database.", difficulty: "EASY", lang: ["typescript"] },
   { category: "database", type: "CODING", text: "Write a query to calculate the average score.", difficulty: "EASY", lang: ["sql"] },
 
-  // 4. DevOps & Cloud - MCQs
-  { category: "devops", type: "MCQ", text: "What is Docker primarily used for?", opts: ["Containerization", "Compiling", "Database design", "Browser support"], ans: "Containerization" },
-  { category: "devops", type: "MCQ", text: "What does CI/CD stand for?", opts: ["Continuous Integration and Continuous Deployment", "Code Inspection and Code Delivery", "Cloud Integration and Cloud Delivery", "Component Integration and Component Deployment"], ans: "Continuous Integration and Continuous Deployment" },
-  { category: "devops", type: "MCQ", text: "Which AWS service provides virtual servers?", opts: ["EC2", "S3", "RDS", "Lambda"], ans: "EC2" },
-  { category: "devops", type: "MCQ", text: "What is Kubernetes?", opts: ["Container orchestration platform", "Database engine", "Frontend library", "Operating system"], ans: "Container orchestration platform" },
-  { category: "devops", type: "MCQ", text: "What is the purpose of a Load Balancer?", opts: ["Distributing network traffic", "Encrypting data", "Storing logs", "Managing users"], ans: "Distributing network traffic" },
+  // 4. Python Programming - MCQs
+  { category: "devops", type: "MCQ", text: "Which component is responsible for memory management and garbage collection in Python?", opts: ["PVM (Python Virtual Machine)", "Interpreter", "Garbage Collector", "Operating System"], ans: "PVM (Python Virtual Machine)" },
+  { category: "devops", type: "MCQ", text: "What keyword is used to create a generator function in Python?", opts: ["yield", "return", "generate", "provide"], ans: "yield" },
+  { category: "devops", type: "MCQ", text: "Which of the following statements about Lists and Tuples is TRUE?", opts: ["Lists are mutable, Tuples are immutable", "Lists are immutable, Tuples are mutable", "Both are immutable", "Both are mutable"], ans: "Lists are mutable, Tuples are immutable" },
+  { category: "devops", type: "MCQ", text: "What is the primary effect of the GIL in CPython?", opts: ["It prevents multiple native threads from executing Python bytecodes at once", "It speeds up multi-threaded execution", "It handles file system locks", "It manages global variables"], ans: "It prevents multiple native threads from executing Python bytecodes at once" },
+  { category: "devops", type: "MCQ", text: "What is the result of [1, 2, 3, 4, 5][::-2]?", opts: ["[5, 3, 1]", "[1, 3, 5]", "[4, 2]", "[5, 4, 3, 2, 1]"], ans: "[5, 3, 1]" },
 
-  // 4. DevOps & Cloud - Coding
-  { category: "devops", type: "CODING", text: "Write a simple Dockerfile for a Node.js app.", difficulty: "MEDIUM", lang: ["bash"] },
-  { category: "devops", type: "CODING", text: "Create a GitHub Action for automatic testing.", difficulty: "HARD", lang: ["yaml"] },
-  { category: "devops", type: "CODING", text: "Configure an Nginx reverse proxy.", difficulty: "MEDIUM", lang: ["bash"] },
-  { category: "devops", type: "CODING", text: "Automate server deployment using Bash.", difficulty: "HARD", lang: ["bash"] },
-  { category: "devops", type: "CODING", text: "Create an S3 bucket and upload a file via CLI.", difficulty: "EASY", lang: ["bash"] },
+  // 4. Python Programming - Coding
+  { category: "devops", type: "CODING", text: "Write a Python function to check if a number is prime.", difficulty: "MEDIUM", lang: ["python"] },
+  { category: "devops", type: "CODING", text: "Write a recursive function to find the nth Fibonacci number.", difficulty: "HARD", lang: ["python"] },
+  { category: "devops", type: "CODING", text: "Reverse a string in Python without using built-in reverse functions.", difficulty: "MEDIUM", lang: ["python"] },
+  { category: "devops", type: "CODING", text: "Implement a basic Stack using a Python list.", difficulty: "MEDIUM", lang: ["python"] },
+  { category: "devops", type: "CODING", text: "Calculate the factorial of a number using recursion.", difficulty: "EASY", lang: ["python"] },
 
   // 5. DSA & Logic - MCQs
   { category: "dsa", type: "MCQ", text: "What is the time complexity of binary search?", opts: ["O(log n)", "O(n)", "O(n^2)", "O(1)"], ans: "O(log n)" },
