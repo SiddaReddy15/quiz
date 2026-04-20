@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { adminApi } from "@/services/api";
 import { 
     ArrowLeft, Save, Globe, Lock, Clock, Trophy, FileText, 
-    CalendarDays, Hourglass, CheckCircle, AlertCircle, Loader2, Sparkles
+    CalendarDays, Hourglass, CheckCircle, AlertCircle, Loader2, Sparkles, Settings
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -34,8 +34,6 @@ export default function EditExam() {
   const { id } = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  
-
 
   const { data: exams, isLoading: isExamsLoading } = useQuery({
     queryKey: ["adminExams"],
@@ -70,6 +68,14 @@ export default function EditExam() {
   }, [exam, reset]);
 
   const isPublished = watch("is_published");
+  const title = watch("title");
+
+  const getInferredTopic = (text: string) => {
+    if (!text) return "Awaiting input...";
+    const keywords = ["python", "java", "react", "node", "sql", "css", "html", "javascript"];
+    const found = keywords.find(k => text.toLowerCase().includes(k));
+    return found ? found.charAt(0).toUpperCase() + found.slice(1) : "General Assessment";
+  };
 
   const mutation = useMutation({
     mutationFn: (data: any) => adminApi.updateExam(id as string, data),
@@ -101,7 +107,7 @@ export default function EditExam() {
       <div className="flex items-center justify-between">
         <Link 
             href="/admin/exams" 
-            className="flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-brand-indigo transition-colors"
+            className="flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-brand-purple transition-colors"
         >
           <ArrowLeft size={16} />
           Back to Inventory
@@ -116,7 +122,7 @@ export default function EditExam() {
               </div>
               <span className="text-xs font-black text-brand-purple uppercase tracking-[0.2em]">Module Settings</span>
            </div>
-           <h1 className="text-4xl font-heading font-black tracking-tight leading-tight">Edit Assessment</h1>
+            <h1 className="text-4xl font-heading font-black tracking-tight leading-tight">Edit Assessment</h1>
         </div>
       </div>
 
@@ -126,9 +132,20 @@ export default function EditExam() {
                 <Sparkles size={120} />
             </div>
 
-            {/* Title Section */}
             <div className="space-y-4 relative z-10">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block ml-1">General Information</label>
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block ml-1">General Information</label>
+                    {title && (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex items-center gap-2 px-3 py-1 bg-brand-indigo/5 border border-brand-indigo/10 rounded-full"
+                        >
+                            <Sparkles size={12} className="text-brand-indigo" />
+                            <span className="text-[10px] font-bold text-brand-indigo uppercase tracking-wider">Auto-Categorized: {getInferredTopic(title)}</span>
+                        </motion.div>
+                    )}
+                </div>
                 <input 
                     type="text" 
                     {...register("title")}
@@ -139,82 +156,78 @@ export default function EditExam() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
-                {/* Configuration */}
+                {/* Left Column */}
                 <div className="space-y-4">
-
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                    <Clock size={14} className="text-brand-indigo" /> Time (Min)
-                                </label>
-                                <input 
-                                    type="number" 
-                                    {...register("duration")}
-                                    className="w-full px-5 py-3 bg-slate-50 border border-border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all"
-                                />
-                            </div>
-
-                            <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                    <Trophy size={14} className="text-brand-emerald" /> Pass (%)
-                                </label>
-                                <input 
-                                    type="number" 
-                                    {...register("passing_score")}
-                                    className="w-full px-5 py-3 bg-slate-50 border border-border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Scheduling */}
-                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                <CalendarDays size={14} className="text-brand-purple" /> Start Date
+                                <Clock size={14} className="text-brand-indigo" /> Time (Min)
                             </label>
                             <input 
-                                type="datetime-local" 
-                                {...register("start_time")}
-                                className={`w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all ${errors.start_time ? "border-red-500" : "border-border"}`}
+                                type="number" 
+                                {...register("duration")}
+                                className="w-full px-5 py-3 bg-slate-50 border border-border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all"
                             />
                         </div>
 
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                <Hourglass size={14} className="text-brand-pink" /> End Date
+                                <Trophy size={14} className="text-brand-emerald" /> Pass (%)
                             </label>
                             <input 
-                                type="datetime-local" 
-                                {...register("end_time")}
-                                className={`w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all ${errors.end_time ? "border-red-500" : "border-border"}`}
+                                type="number" 
+                                {...register("passing_score")}
+                                className="w-full px-5 py-3 bg-slate-50 border border-border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all"
                             />
-                            {errors.end_time && <p className="text-[10px] font-bold text-red-500">{errors.end_time.message as string}</p>}
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Options */}
-            <div className="p-8 bg-brand-indigo/[0.03] rounded-[32px] border border-brand-indigo/10 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div className="flex items-start gap-4">
-                    <div className={`p-4 rounded-2xl ${isPublished ? "bg-brand-emerald text-white shadow-lg shadow-brand-emerald/20" : "bg-slate-200 text-slate-500"} transition-all duration-500`}>
-                        {isPublished ? <Globe size={24} /> : <Lock size={24} />}
-                    </div>
-                    <div>
-                        <p className="font-heading font-black text-slate-900 leading-tight">Live Status</p>
-                        <p className="text-xs text-muted-foreground mt-1 max-w-xs font-medium">Control the visibility of this assessment for all candidates.</p>
+                    <div className="space-y-3">
+                        <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            <CalendarDays size={14} className="text-brand-purple" /> Start Date
+                        </label>
+                        <input 
+                            type="datetime-local" 
+                            {...register("start_time")}
+                            className={`w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all ${errors.start_time ? "border-red-500" : "border-border"}`}
+                        />
                     </div>
                 </div>
-                <button 
-                    type="button"
-                    onClick={() => setValue("is_published", !isPublished)}
-                    className={`relative w-16 h-8 rounded-full transition-colors duration-300 ${isPublished ? "bg-brand-indigo" : "bg-slate-300"}`}
-                >
-                    <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${isPublished ? "translate-x-8" : ""}`} />
-                </button>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                    <div className="space-y-3">
+                        <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            <Hourglass size={14} className="text-brand-pink" /> End Date
+                        </label>
+                        <input 
+                            type="datetime-local" 
+                            {...register("end_time")}
+                            className={`w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all ${errors.end_time ? "border-red-500" : "border-border"}`}
+                        />
+                        {errors.end_time && <p className="text-[10px] font-bold text-red-500">{errors.end_time.message as string}</p>}
+                    </div>
+
+                    {/* Status Toggle moved here to fill the gap better or kept in its own section */}
+                    <div className="p-6 bg-brand-indigo/[0.03] rounded-[32px] border border-brand-indigo/10 flex flex-col items-start justify-between h-full min-h-[140px]">
+                        <div className="flex items-start gap-3">
+                            <div className={`p-3 rounded-xl ${isPublished ? "bg-brand-emerald text-white" : "bg-slate-200 text-slate-500"}`}>
+                                {isPublished ? <Globe size={20} /> : <Lock size={20} />}
+                            </div>
+                            <div>
+                                <p className="text-sm font-black text-slate-900 leading-tight">Live Status</p>
+                                <p className="text-[10px] text-muted-foreground mt-1 font-medium">Toggle candidate visibility.</p>
+                            </div>
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={() => setValue("is_published", !isPublished)}
+                            className={`relative w-14 h-7 rounded-full transition-colors duration-300 self-end ${isPublished ? "bg-brand-indigo" : "bg-slate-300"}`}
+                        >
+                            <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${isPublished ? "translate-x-7" : ""}`} />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -237,24 +250,4 @@ export default function EditExam() {
       </form>
     </div>
   );
-}
-
-function Settings(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
 }

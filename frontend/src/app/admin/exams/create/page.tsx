@@ -46,6 +46,14 @@ export default function CreateExam() {
   });
 
   const isPublished = watch("is_published");
+  const title = watch("title");
+
+  const getInferredTopic = (text: string) => {
+    if (!text) return "Awaiting input...";
+    const keywords = ["python", "java", "react", "node", "sql", "css", "html", "javascript"];
+    const found = keywords.find(k => text.toLowerCase().includes(k));
+    return found ? found.charAt(0).toUpperCase() + found.slice(1) : "General Assessment";
+  };
 
   const mutation = useMutation({
     mutationFn: (data: any) => adminApi.createExam(data),
@@ -90,9 +98,20 @@ export default function CreateExam() {
                 <Sparkles size={120} />
             </div>
 
-            {/* Title Section */}
             <div className="space-y-4 relative z-10">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block ml-1">General Information</label>
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block ml-1">General Information</label>
+                    {title && (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex items-center gap-2 px-3 py-1 bg-brand-indigo/5 border border-brand-indigo/10 rounded-full"
+                        >
+                            <Sparkles size={12} className="text-brand-indigo" />
+                            <span className="text-[10px] font-bold text-brand-indigo uppercase tracking-wider">Auto-Categorized: {getInferredTopic(title)}</span>
+                        </motion.div>
+                    )}
+                </div>
                 <input 
                     type="text" 
                     {...register("title")}
