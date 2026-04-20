@@ -48,23 +48,47 @@ export const getQuestionsByCategory = async (req: AuthRequest, res: Response) =>
 };
 
 export const createExam = async (req: AuthRequest, res: Response) => {
-  const { title, duration, passing_score, start_time, end_time, category_id, is_published } = req.body;
+  const { title, duration, passing_score, start_time, end_time, is_published } = req.body;
 
   try {
     const examId = generateId();
+    
+    // Smart Category Inference: Find or create category based on title
+    // 1. Try to find an existing category that is mentioned in the title
+    const categoriesResult = await db.execute("SELECT * FROM categories");
+    const categories = categoriesResult.rows;
+    
+    let inferredCategoryId = null;
+    const titleLower = title.toLowerCase();
+    
+    for (const cat of categories as any[]) {
+      if (titleLower.includes(cat.name.toLowerCase()) || titleLower.includes(cat.slug.toLowerCase())) {
+        inferredCategoryId = cat.id;
+        break;
+      }
+    }
+    
+    // 2. If no category found, create a new one based on the first word or full title
+    if (!inferredCategoryId) {
+      const categoryId = generateId();
+      const slug = title.toLowerCase().split(' ')[0].replace(/[^a-z0-9]/g, '');
+      await db.execute({
+        sql: "INSERT INTO categories (id, slug, name) VALUES (?, ?, ?)",
+        args: [categoryId, slug, title]
+      });
+      inferredCategoryId = categoryId;
+    }
+
     await db.execute({
       sql: "INSERT INTO exams (id, title, duration, passing_score, start_time, end_time, category_id, is_published) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      args: [examId, title, duration, passing_score, start_time, end_time, category_id || null, is_published ? 1 : 0],
+      args: [examId, title, duration, passing_score, start_time, end_time, inferredCategoryId, is_published ? 1 : 0],
     });
 
     if (req.user) {
-        await logActivity(req.user.id, "CREATED_EXAM", `Created Exam - ${title}`, "SUCCESS");
+        await logActivity(req.user.id, "CREATED_EXAM", `Created Exam - ${title} (Auto-categorized)`, "SUCCESS");
     }
 
-    // Autosync: We no longer need to copy questions from the repository to the exam.
-    // The student controller will dynamically pull questions based on the exam's category_id.
-    
-    res.status(201).json({ id: examId, message: "Exam created successfully and synchronized with repository" });
+    res.status(201).json({ id: examId, message: "Exam created and auto-categorized successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -108,7 +132,16 @@ export const addQuestion = async (req: AuthRequest, res: Response) => {
   const starter_code = req.body.starter_code || req.body.starterCode;
   const test_cases = req.body.test_cases || req.body.testCases;
 
+  let finalCategoryId = category_id;
   try {
+    if (!finalCategoryId && exam_id) {
+        const exam = await db.execute({
+            sql: "SELECT category_id FROM exams WHERE id = ?",
+            args: [exam_id]
+        });
+        finalCategoryId = exam.rows[0]?.category_id;
+    }
+
     const id = generateId();
     await db.execute({
       sql: `INSERT INTO questions (
@@ -119,7 +152,7 @@ export const addQuestion = async (req: AuthRequest, res: Response) => {
       args: [
         id, 
         exam_id || null, 
-        category_id || null, 
+        finalCategoryId || null, 
         type, 
         title || null,
         question_text, 
@@ -150,17 +183,41 @@ export const addQuestion = async (req: AuthRequest, res: Response) => {
 
 export const updateExam = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const { title, duration, passing_score, start_time, end_time, category_id } = req.body;
+    const { title, duration, passing_score, start_time, end_time } = req.body;
 
     try {
+        // Smart Category Inference: Find or create category based on title
+        const categoriesResult = await db.execute("SELECT * FROM categories");
+        const categories = categoriesResult.rows;
+        
+        let inferredCategoryId = null;
+        const titleLower = title.toLowerCase();
+        
+        for (const cat of categories as any[]) {
+          if (titleLower.includes(cat.name.toLowerCase()) || titleLower.includes(cat.slug.toLowerCase())) {
+            inferredCategoryId = cat.id;
+            break;
+          }
+        }
+        
+        if (!inferredCategoryId) {
+          const categoryId = generateId();
+          const slug = title.toLowerCase().split(' ')[0].replace(/[^a-z0-9]/g, '');
+          await db.execute({
+            sql: "INSERT INTO categories (id, slug, name) VALUES (?, ?, ?)",
+            args: [categoryId, slug, title]
+          });
+          inferredCategoryId = categoryId;
+        }
+
         await db.execute({
             sql: `UPDATE exams SET 
                 title = ?, duration = ?, passing_score = ?, 
                 start_time = ?, end_time = ?, category_id = ? 
                 WHERE id = ?`,
-            args: [title, duration, passing_score, start_time, end_time, category_id || null, id]
+            args: [title, duration, passing_score, start_time, end_time, inferredCategoryId, id]
         });
-        res.json({ message: "Exam updated successfully" });
+        res.json({ message: "Exam updated and re-categorized successfully" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });
@@ -337,8 +394,8 @@ export const enrollStudent = async (req: AuthRequest, res: Response) => {
 
         const id = generateId();
         
-        // Generate secure temporary password
-        const tempPassword = crypto.randomBytes(6).toString("hex"); // e.g., '1a2b3c4d5e6f'
+        // Use permanent password for all students
+        const tempPassword = "student123"; 
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
         await db.execute({
@@ -468,9 +525,15 @@ export const deleteQuestion = async (req: AuthRequest, res: Response) => {
 export const getQuestionsByExam = async (req: AuthRequest, res: Response) => {
     const { examId } = req.params;
     try {
-        const result = await db.execute({
-            sql: "SELECT * FROM questions WHERE exam_id = ?",
+        const exam = await db.execute({
+            sql: "SELECT category_id FROM exams WHERE id = ?",
             args: [examId]
+        });
+        const categoryId = exam.rows[0]?.category_id;
+
+        const result = await db.execute({
+            sql: "SELECT * FROM questions WHERE exam_id = ? OR category_id = ?",
+            args: [examId, categoryId || '']
         });
 
         const parsedQuestions = result.rows.map((q: any) => ({
@@ -502,6 +565,15 @@ export const uploadQuestionsExcel = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "Excel file is empty" });
     }
 
+    let finalCategoryId = category_id;
+    if (!finalCategoryId && exam_id) {
+        const exam = await db.execute({
+            sql: "SELECT category_id FROM exams WHERE id = ?",
+            args: [exam_id]
+        });
+        finalCategoryId = exam.rows[0]?.category_id;
+    }
+
     let successCount = 0;
 
     for (const item of data) {
@@ -530,7 +602,7 @@ export const uploadQuestionsExcel = async (req: AuthRequest, res: Response) => {
         args: [
           id,
           exam_id || null,
-          category_id || null,
+          finalCategoryId || null,
           item.type || "MCQ",
           item.question_text,
           JSON.stringify(parsedOptions),
@@ -612,52 +684,4 @@ export const exportQuestionsTemplate = async (req: AuthRequest, res: Response) =
   }
 };
 
-export const getExamAnalytics = async (req: AuthRequest, res: Response) => {
-    const { id: examId } = req.params;
-    try {
-        // Questions with success rate
-        const questions = await db.execute({
-            sql: `
-                SELECT q.id, q.question_text, q.type, q.marks,
-                       COUNT(ans.id) as total_answers,
-                       SUM(CASE WHEN ans.is_correct = 1 THEN 1 ELSE 0 END) as correct_count
-                FROM questions q
-                LEFT JOIN answers ans ON q.id = ans.question_id
-                WHERE q.exam_id = ?
-                GROUP BY q.id
-            `,
-            args: [examId]
-        });
 
-        // Submission stats
-        const submissions = await db.execute({
-            sql: "SELECT COUNT(*) as count, AVG(score) as avg_score FROM attempts WHERE exam_id = ? AND status = 'SUBMITTED'",
-            args: [examId]
-        });
-
-        // Pass/Fail distribution
-        const passFail = await db.execute({
-            sql: `
-                SELECT 
-                    SUM(CASE WHEN a.score >= e.passing_score THEN 1 ELSE 0 END) as passed,
-                    SUM(CASE WHEN a.score < e.passing_score THEN 1 ELSE 0 END) as failed
-                FROM attempts a
-                JOIN exams e ON a.exam_id = e.id
-                WHERE a.exam_id = ? AND a.status = 'SUBMITTED'
-            `,
-            args: [examId]
-        });
-
-        res.json({
-            questions: questions.rows,
-            summary: submissions.rows[0],
-            distribution: {
-                passed: passFail.rows[0].passed || 0,
-                failed: passFail.rows[0].failed || 0
-            }
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};

@@ -68,13 +68,7 @@ export default function ExamManagement() {
     return matchesSearch && matchesStatus;
   });
 
-  const repositories = [
-    { title: "Frontend Development", icon: "🌐", description: "Modern UI & Logic", color: "bg-blue-50 text-blue-600", border: "border-blue-100" },
-    { title: "Backend Development", icon: "⚙️", description: "APIs & Core Systems", color: "bg-indigo-50 text-indigo-600", border: "border-indigo-100" },
-    { title: "Database Management", icon: "🗄️", description: "Data Strategy & SQL", color: "bg-purple-50 text-purple-600", border: "border-purple-100" },
-    { title: "Python Programming", icon: "🐍", description: "Advanced scripting & logic", color: "bg-emerald-50 text-emerald-600", border: "border-emerald-100" },
-    { title: "DSA & Logic", icon: "🧮", description: "Problem Solving", color: "bg-amber-50 text-amber-600", border: "border-amber-100" },
-  ];
+
 
   return (
     <div className="space-y-12 font-body selection:bg-brand-indigo/10">
@@ -94,28 +88,7 @@ export default function ExamManagement() {
         </Link>
       </div>
 
-      {/* Technical Repositories Grid */}
-      <div>
-        <div className="flex items-center gap-3 mb-6">
-            <div className="w-1 h-6 bg-brand-indigo rounded-full" />
-            <h2 className="text-xl font-black font-heading tracking-tight">Technical Repositories</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {repositories.map((repo, i) => (
-                <motion.div 
-                    key={repo.title}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className={`p-5 rounded-[28px] border-2 ${repo.border} ${repo.color} group hover:scale-[1.02] transition-all cursor-default bg-white/50 backdrop-blur-sm shadow-sm`}
-                >
-                    <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">{repo.icon}</div>
-                    <div className="font-black text-sm mb-1">{repo.title}</div>
-                    <div className="text-[10px] font-bold opacity-70 uppercase tracking-widest">{repo.description}</div>
-                </motion.div>
-            ))}
-        </div>
-      </div>
+
 
       <div className="bg-white p-4 rounded-[32px] border border-border flex flex-col md:flex-row gap-4 shadow-sm">
         <div className="flex-1 relative flex items-center">

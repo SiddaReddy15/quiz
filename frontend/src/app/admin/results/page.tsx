@@ -101,12 +101,7 @@ export default function AdminResults() {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                       <Link 
-                        href={`/admin/results/${res.exam_id || ''}`} 
-                        className="p-2 rounded-xl border border-transparent hover:border-border hover:bg-white text-brand-indigo transition-all flex items-center gap-1 text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100"
-                       >
-                         Analytics <ChevronRight size={14} />
-                       </Link>
+                       {/* Analytics Removed */}
                     </td>
                   </motion.tr>
                 );

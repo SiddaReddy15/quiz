@@ -44,6 +44,21 @@ export default function ExamResult() {
   const { attempt, answers } = data;
   const isPassed = attempt.score >= attempt.passing_score;
 
+  const handleDownloadPDF = async () => {
+    try {
+        const response = await studentApi.exportResultPDF(attemptId as string);
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Exam_Report_${attemptId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    } catch (error) {
+        console.error("Download error:", error);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -55,7 +70,10 @@ export default function ExamResult() {
           <p className="text-muted-foreground font-medium flex items-center gap-2">Comprehensive performance analysis for {attempt.exam_title}.</p>
         </div>
         <div className="flex gap-4">
-            <button className="flex items-center gap-3 px-6 py-3 bg-white border border-border rounded-2xl font-black text-xs uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+            <button 
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-3 px-6 py-3 bg-white border border-border rounded-2xl font-black text-xs uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+            >
                 <Download size={16} /> Download PDF
             </button>
             <button className="flex items-center gap-3 px-8 py-3 bg-primary-gradient text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-brand-indigo/20 hover:scale-105 transition-all">

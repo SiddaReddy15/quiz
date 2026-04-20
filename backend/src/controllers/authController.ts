@@ -8,14 +8,15 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_super_secret_jwt_key_12345";
 
 export const register = async (req: Request, res: Response) => {
   const { name, email, password, role } = req.body;
+  const normalizedEmail = String(email || "").trim().toLowerCase();
 
   try {
-    const existingUser = await db.execute({
+    const result = await db.execute({
       sql: "SELECT * FROM users WHERE email = ?",
-      args: [email],
+      args: [normalizedEmail],
     });
 
-    if (existingUser.rows.length > 0) {
+    if (result.rows.length > 0) {
       return res.status(400).json({ message: "User already exists" });
     }
 
@@ -24,7 +25,7 @@ export const register = async (req: Request, res: Response) => {
 
     await db.execute({
       sql: "INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
-      args: [userId, name, email, hashedPassword, role || "STUDENT"],
+      args: [userId, name, normalizedEmail, hashedPassword, role || "STUDENT"],
     });
 
     const token = jwt.sign(
@@ -51,11 +52,12 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
+  const normalizedEmail = String(email || "").trim().toLowerCase();
 
   try {
     const result = await db.execute({
       sql: "SELECT * FROM users WHERE email = ?",
-      args: [email],
+      args: [normalizedEmail],
     });
 
     if (result.rows.length === 0) {

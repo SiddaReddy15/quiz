@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Loader2, GraduationCap, Mail, Lock, ArrowLeft } from "lucide-react";
+import { Loader2, GraduationCap, Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -24,6 +24,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // If already logged in, redirect
   useEffect(() => {
@@ -50,12 +51,13 @@ export default function LoginPage() {
     try {
       await login(data.email, data.password);
       toast.success("Welcome back!");
-      // redirection is handled by the useEffect above once user state updates
     } catch (err: any) {
-      setError(
-        err.response?.data?.message || 
-        "Invalid email or password."
-      );
+      console.error("Login error:", err);
+      if (!err.response) {
+        setError("Network error: Cannot connect to server. Please ensure backend is running.");
+      } else {
+        setError(err.response.data?.message || "Invalid email or password.");
+      }
     } finally {
       setLoading(false);
     }
@@ -120,11 +122,18 @@ export default function LoginPage() {
                   <Lock size={18} />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   {...register("password")}
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-border rounded-2xl focus:ring-4 focus:ring-brand-indigo/10 focus:border-brand-indigo outline-none transition-all font-body"
+                  className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-border rounded-2xl focus:ring-4 focus:ring-brand-indigo/10 focus:border-brand-indigo outline-none transition-all font-body"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-brand-indigo transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
               <div className="flex justify-between items-center px-1">
                 {errors.password ? (

@@ -21,8 +21,8 @@ export default function AdminSidebar() {
     <div className="w-64 h-screen bg-white border-r border-border flex flex-col fixed left-0 top-0 z-40">
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <div className="bg-white p-1 rounded-lg border border-slate-100 shadow-sm">
-             <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+          <div className="w-8 h-8 bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden flex items-center justify-center">
+             <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <span className="text-xl font-heading font-black text-slate-800 tracking-tight">
             ExamPro

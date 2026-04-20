@@ -189,11 +189,7 @@ export default function ExamInterface() {
             </div>
             
             <button 
-                onClick={() => {
-                    if (window.confirm("Are you sure you want to submit? You cannot undo this action.")) {
-                        submitMutation.mutate();
-                    }
-                }}
+                onClick={() => submitMutation.mutate()}
                 disabled={submitMutation.isPending}
                 className="bg-primary-gradient text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-brand-indigo/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
             >
@@ -360,9 +356,7 @@ export default function ExamInterface() {
                     <button 
                         onClick={() => {
                             if (currentIdx === data.questions.length - 1) {
-                                if (window.confirm("This is the last question. Submit the assessment?")) {
-                                    submitMutation.mutate();
-                                }
+                                submitMutation.mutate();
                             } else {
                                 setCurrentIdx(prev => Math.min(data.questions.length - 1, prev + 1));
                             }

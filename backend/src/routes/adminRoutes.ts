@@ -3,7 +3,7 @@ import {
     createExam, getExams, addQuestion, publishExam, 
     getExamStats, uploadQuestionsExcel, deleteExam, 
     getStudents, getQuestionsByExam, enrollStudent, exportStudentsToCSV,
-    getAllResults, getExamAnalytics, getCategories, getQuestionsByCategory,
+    getAllResults, getCategories, getQuestionsByCategory,
     updateQuestion, deleteQuestion, updateExam, exportQuestionsTemplate, getQuestionById
 } from "../controllers/adminController";
 import { authenticate, authorize } from "../middleware/authMiddleware";
@@ -33,7 +33,7 @@ router.get("/students", getStudents);
 router.get("/students/export", exportStudentsToCSV);
 router.post("/students", enrollStudent);
 router.get("/results", getAllResults);
-router.get("/results/:id", getExamAnalytics);
+
 router.get("/categories", getCategories);
 router.get("/questions/category/:categorySlug", getQuestionsByCategory);
 

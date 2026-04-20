@@ -9,7 +9,7 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response) => {
     const userId = req.user.id;
     console.log(`Fetching dashboard for student: ${userId}`);
     try {
-        const totalExams = await db.execute("SELECT COUNT(*) as count FROM exams WHERE is_published = 1");
+        const totalExams = await db.execute("SELECT COUNT(*) as count FROM exams");
         console.log(`Total Available Exams: ${totalExams.rows[0].count}`);
         
         const completedExams = await db.execute({
@@ -67,7 +67,6 @@ export const getAvailableExams = async (req: AuthRequest, res: Response) => {
                 FROM exams e
                 LEFT JOIN categories c ON e.category_id = c.id
                 LEFT JOIN attempts a ON e.id = a.exam_id AND a.user_id = ?
-                WHERE e.is_published = 1
                 ORDER BY e.created_at DESC
             `,
             args: [userId]
@@ -96,7 +95,34 @@ export const startAttempt = async (req: AuthRequest, res: Response) => {
             if (existing.rows[0].status === 'SUBMITTED') {
                 return res.status(400).json({ message: "Exam already submitted" });
             }
-            return res.json({ attemptId: existing.rows[0].id, message: "Resuming attempt" });
+            const attemptId = existing.rows[0].id;
+
+            // Fetch exam info and questions
+            const examRes = await db.execute({
+                sql: "SELECT * FROM exams WHERE id = ?",
+                args: [exam_id]
+            });
+            const exam = examRes.rows[0];
+            const categoryId = exam?.category_id;
+
+            const questionsRes = await db.execute({
+                sql: "SELECT * FROM questions WHERE exam_id = ? OR category_id = ?",
+                args: [exam_id, categoryId || '']
+            });
+
+            const questions = questionsRes.rows.map((q: any) => ({
+                ...q,
+                options: typeof q.options === 'string' ? JSON.parse(q.options || '[]') : q.options,
+                languages: typeof q.languages === 'string' ? JSON.parse(q.languages || '[]') : q.languages,
+                test_cases: typeof q.test_cases === 'string' ? JSON.parse(q.test_cases || '[]') : q.test_cases
+            }));
+
+            return res.json({ 
+                attemptId, 
+                questions,
+                exam,
+                message: "Resuming attempt" 
+            });
         }
 
         const attemptId = generateId();
@@ -105,7 +131,32 @@ export const startAttempt = async (req: AuthRequest, res: Response) => {
             args: [attemptId, userId, exam_id]
         });
 
-        res.status(201).json({ attemptId, message: "Attempt started" });
+        // Fetch exam info and questions
+        const examRes = await db.execute({
+            sql: "SELECT * FROM exams WHERE id = ?",
+            args: [exam_id]
+        });
+        const exam = examRes.rows[0];
+        const categoryId = exam?.category_id;
+
+        const questionsRes = await db.execute({
+            sql: "SELECT * FROM questions WHERE exam_id = ? OR category_id = ?",
+            args: [exam_id, categoryId || '']
+        });
+
+        const questions = questionsRes.rows.map((q: any) => ({
+            ...q,
+            options: typeof q.options === 'string' ? JSON.parse(q.options || '[]') : q.options,
+            languages: typeof q.languages === 'string' ? JSON.parse(q.languages || '[]') : q.languages,
+            test_cases: typeof q.test_cases === 'string' ? JSON.parse(q.test_cases || '[]') : q.test_cases
+        }));
+
+        res.status(201).json({ 
+            attemptId, 
+            questions,
+            exam,
+            message: "Attempt started" 
+        });
 
         if (req.user) {
             const exam = await db.execute({ sql: "SELECT title FROM exams WHERE id = ?", args: [exam_id] });
@@ -387,6 +438,96 @@ export const getAttemptQuestions = async (req: AuthRequest, res: Response) => {
             error: error.message,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
         });
+    }
+};
+
+import PDFDocument from "pdfkit";
+
+export const exportResultPDF = async (req: AuthRequest, res: Response) => {
+    const { attemptId } = req.params;
+    try {
+        const attemptRes = await db.execute({
+            sql: `
+                SELECT a.*, e.title as exam_title, e.passing_score, u.name as student_name
+                FROM attempts a
+                JOIN exams e ON a.exam_id = e.id
+                JOIN users u ON a.user_id = u.id
+                WHERE a.id = ?
+            `,
+            args: [attemptId]
+        });
+
+        if (attemptRes.rows.length === 0) return res.status(404).json({ message: "Result not found" });
+        const attempt = attemptRes.rows[0];
+
+        const answers = await db.execute({
+            sql: `
+                SELECT ans.*, q.question_text, q.correct_answer, q.type, q.marks
+                FROM answers ans
+                JOIN questions q ON ans.question_id = q.id
+                WHERE ans.attempt_id = ?
+            `,
+            args: [attemptId]
+        });
+
+        const doc = new PDFDocument({ margin: 50 });
+        const examTitle = String(attempt.exam_title || "Exam");
+        const studentName = String(attempt.student_name || "Student");
+        let filename = `Report_${examTitle.replace(/\s+/g, '_')}_${studentName.replace(/\s+/g, '_')}.pdf`;
+
+        res.setHeader("Content-disposition", 'attachment; filename="' + filename + '"');
+        res.setHeader("Content-type", "application/pdf");
+
+        // Header
+        doc.fontSize(24).fillColor('#4f46e5').text("ExamPro - Assessment Report", { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(14).fillColor('#64748b').text(`Exam: ${examTitle}`, { align: 'center' });
+        doc.text(`Candidate: ${studentName}`, { align: 'center' });
+        doc.moveDown(2);
+
+        // Stats Box
+        const score = Number(attempt.score || 0);
+        const passingScore = Number(attempt.passing_score || 0);
+        const isPassed = score >= passingScore;
+        doc.rect(50, doc.y, 500, 100).fillAndStroke(isPassed ? '#f0fdf4' : '#fef2f2', isPassed ? '#10b981' : '#ef4444');
+        doc.fillColor(isPassed ? '#065f46' : '#991b1b').fontSize(20).text(`Status: ${isPassed ? "PASSED" : "FAILED"}`, 70, doc.y + 25);
+        doc.fontSize(30).text(`${score}%`, 300, doc.y - 12, { align: 'right' });
+        doc.fontSize(12).fillColor('#64748b').text(`Overall Accuracy`, 300, doc.y, { align: 'right' });
+        
+        doc.moveDown(4);
+
+        // Summary
+        doc.fillColor('#1e293b').fontSize(16).text("Detailed Performance Review");
+        doc.moveDown();
+
+        answers.rows.forEach((ans: any, index: number) => {
+            if (doc.y > 650) doc.addPage();
+            
+            doc.fontSize(12).fillColor('#64748b').text(`Question ${index + 1}: ${ans.marks_awarded}/${ans.marks} Marks`);
+            doc.fontSize(14).fillColor('#1e293b').text(ans.question_text);
+            doc.moveDown(0.5);
+            
+            doc.fontSize(10).fillColor('#64748b').text("Your Answer: ");
+            doc.fillColor(ans.is_correct ? '#059669' : '#dc2626').text(ans.selected_option || ans.answer_text || (ans.code_content ? "[Source Code]" : "N/A"));
+            
+            if (!ans.is_correct) {
+                doc.fillColor('#64748b').text("Correct Answer: ");
+                doc.fillColor('#059669').text(ans.correct_answer || "N/A");
+            }
+            doc.moveDown();
+            doc.strokeColor('#e2e8f0').moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+            doc.moveDown();
+        });
+
+        // Footer
+        doc.fontSize(10).fillColor('#94a3b8').text(`Generated on ${new Date().toLocaleString()}`, 50, 750, { align: 'center' });
+
+        doc.pipe(res);
+        doc.end();
+
+    } catch (error) {
+        console.error("PDF Generation Error:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 

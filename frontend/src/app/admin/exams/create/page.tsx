@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { adminApi } from "@/services/api";
 import { 
     ArrowLeft, Save, Globe, Lock, Clock, Trophy, FileText, 
-    CalendarDays, Hourglass, CheckCircle, AlertCircle, Loader2, Sparkles, Layers
+    CalendarDays, Hourglass, CheckCircle, AlertCircle, Loader2, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -16,7 +16,6 @@ import * as z from "zod";
 
 const examSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  category_id: z.string().min(1, "Please select a technical repository"),
   duration: z.coerce.number().min(1, "Duration must be at least 1 minute"),
   passing_score: z.coerce.number().min(0).max(100),
   start_time: z.string().refine(val => !val || new Date(val) > new Date(), "Start time must be in the future"),
@@ -33,22 +32,11 @@ const examSchema = z.object({
 export default function CreateExam() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  
-  const { data: categories, isLoading: isCatsLoading } = useQuery({
-    queryKey: ["adminCategories"],
-    queryFn: async () => {
-        const res = await adminApi.getCategories();
-        return res.data || [];
-    },
-    staleTime: 0,
-    refetchOnMount: true
-  });
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
     resolver: zodResolver(examSchema),
     defaultValues: {
       title: "",
-      category_id: "",
       duration: 60,
       passing_score: 40,
       start_time: "",
@@ -92,52 +80,32 @@ export default function CreateExam() {
               </div>
               <span className="text-xs font-black text-brand-indigo uppercase tracking-[0.2em]">New Assessment</span>
            </div>
-           <h1 className="text-4xl font-heading font-black tracking-tight leading-tight">Construct Evaluation</h1>
+            <h1 className="text-4xl font-heading font-black tracking-tight leading-tight">Create Assessment</h1>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        <div className="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-border space-y-10 relative overflow-hidden">
+        <div className="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-border space-y-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-10 opacity-5">
                 <Sparkles size={120} />
             </div>
 
             {/* Title Section */}
             <div className="space-y-4 relative z-10">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block ml-1">Assessment Identity</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block ml-1">General Information</label>
                 <input 
                     type="text" 
                     {...register("title")}
-                    placeholder="Enter diagnostic title..."
-                    className={`w-full text-3xl font-heading font-black bg-transparent border-b-2 outline-none py-4 transition-all placeholder:text-slate-200 ${errors.title ? "border-red-500" : "border-slate-100 focus:border-brand-indigo"}`}
+                    placeholder="Enter assessment title..."
+                    className={`w-full text-2xl font-heading font-bold bg-transparent border-b-2 outline-none py-3 transition-all placeholder:text-slate-200 ${errors.title ? "border-red-500" : "border-slate-100 focus:border-brand-indigo"}`}
                 />
                 {errors.title && <p className="text-xs font-bold text-red-500 mt-2">{errors.title.message as string}</p>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
                 {/* Configuration */}
-                <div className="space-y-8">
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
-                        <div className="w-1.5 h-6 bg-brand-indigo rounded-full" />
-                        Infrastructure
-                    </h3>
-                    
-                    <div className="space-y-6">
-                        <div className="space-y-3">
-                            <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                <Layers size={14} className="text-brand-indigo" /> Technical Repositories
-                            </label>
-                            <select 
-                                {...register("category_id")}
-                                className={`w-full px-6 py-4 bg-slate-50 border rounded-2xl font-black focus:ring-4 ring-brand-indigo/10 outline-none transition-all appearance-none ${errors.category_id ? "border-red-500" : "border-border"}`}
-                            >
-                                <option value="">{isCatsLoading ? "Refreshing Repositories..." : "Select Domain..."}</option>
-                                {categories?.map((cat: any) => (
-                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                ))}
-                            </select>
-                            {errors.category_id && <p className="text-xs font-bold text-red-500">{errors.category_id.message as string}</p>}
-                        </div>
+                <div className="space-y-4">
+
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-3">
@@ -147,7 +115,7 @@ export default function CreateExam() {
                                 <input 
                                     type="number" 
                                     {...register("duration")}
-                                    className="w-full px-6 py-4 bg-slate-50 border border-border rounded-2xl font-black focus:ring-4 ring-brand-indigo/10 outline-none transition-all"
+                                    className="w-full px-5 py-3 bg-slate-50 border border-border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all"
                                 />
                             </div>
 
@@ -158,21 +126,14 @@ export default function CreateExam() {
                                 <input 
                                     type="number" 
                                     {...register("passing_score")}
-                                    className="w-full px-6 py-4 bg-slate-50 border border-border rounded-2xl font-black focus:ring-4 ring-brand-indigo/10 outline-none transition-all"
+                                    className="w-full px-5 py-3 bg-slate-50 border border-border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all"
                                 />
                             </div>
                         </div>
-                    </div>
                 </div>
 
                 {/* Scheduling */}
-                <div className="space-y-8">
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
-                        <div className="w-1.5 h-6 bg-brand-purple rounded-full" />
-                        Window
-                    </h3>
-                    
-                    <div className="space-y-6">
+                <div className="space-y-4">
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                                 <CalendarDays size={14} className="text-brand-purple" /> Start Date
@@ -180,7 +141,7 @@ export default function CreateExam() {
                             <input 
                                 type="datetime-local" 
                                 {...register("start_time")}
-                                className={`w-full px-6 py-4 bg-slate-50 border rounded-2xl font-black focus:ring-4 ring-brand-indigo/10 outline-none transition-all ${errors.start_time ? "border-red-500" : "border-border"}`}
+                                className={`w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all ${errors.start_time ? "border-red-500" : "border-border"}`}
                             />
                         </div>
 
@@ -191,11 +152,10 @@ export default function CreateExam() {
                             <input 
                                 type="datetime-local" 
                                 {...register("end_time")}
-                                className={`w-full px-6 py-4 bg-slate-50 border rounded-2xl font-black focus:ring-4 ring-brand-indigo/10 outline-none transition-all ${errors.end_time ? "border-red-500" : "border-border"}`}
+                                className={`w-full px-5 py-3 bg-slate-50 border rounded-2xl font-bold focus:ring-4 ring-brand-indigo/10 outline-none transition-all ${errors.end_time ? "border-red-500" : "border-border"}`}
                             />
                             {errors.end_time && <p className="text-[10px] font-bold text-red-500">{errors.end_time.message as string}</p>}
                         </div>
-                    </div>
                 </div>
             </div>
 
@@ -224,16 +184,16 @@ export default function CreateExam() {
             <button 
                 type="submit"
                 disabled={mutation.isPending}
-                className="flex-[2] py-5 bg-primary-gradient text-white rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl shadow-brand-indigo/30 hover:scale-[1.02] active:scale-95 transition-all"
+                className="flex-[2] py-4 bg-primary-gradient text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 shadow-xl shadow-brand-indigo/20 hover:scale-[1.01] active:scale-95 transition-all"
             >
                 {mutation.isPending ? <Loader2 size={24} className="animate-spin" /> : <Save size={24} />}
-                Deploy Evaluation
+                Create Assessment
             </button>
             <Link 
                 href="/admin/exams"
-                className="flex-1 py-5 bg-white border border-border rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-slate-50 transition-all text-muted-foreground"
+                className="flex-1 py-4 bg-white border border-border rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-slate-50 transition-all text-muted-foreground"
             >
-                Abort
+                Cancel
             </Link>
         </div>
       </form>

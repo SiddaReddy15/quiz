@@ -41,7 +41,6 @@ export const adminApi = {
   exportStudentsCSV: () => api.get("/admin/students/export", { responseType: "blob" }),
   enrollStudent: (data: any) => api.post("/admin/students", data),
   getAllResults: () => api.get("/admin/results"),
-  getExamAnalytics: (examId: string) => api.get(`/admin/results/${examId}`),
   getQuestionsByCategory: (categoryId: string) => api.get(`/admin/questions/category/${categoryId}`),
   getCategories: () => api.get("/admin/categories"),
   downloadTemplate: () => api.get("/admin/questions/template", { responseType: "blob" }),
@@ -55,6 +54,7 @@ export const studentApi = {
   saveAnswer: (data: any) => api.post("/student/answer/save", data),
   submitAttempt: (data: any) => api.post("/student/attempt/submit", data),
   getResult: (attemptId: string) => api.get(`/student/results/${attemptId}`),
+  exportResultPDF: (attemptId: string) => api.get(`/student/results/${attemptId}/pdf`, { responseType: "blob" }),
   runCode: (data: any) => api.post("/student/code/run", data),
 };
 

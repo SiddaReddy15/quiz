@@ -29,7 +29,7 @@ export default function StudentDashboard() {
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-heading font-black tracking-tight mb-2">Welcome Back, {user?.name || 'Candidate'}</h1>
+          <h1 className="text-4xl font-heading font-black tracking-tight mb-2">Welcome Back, {user?.name?.split(' ')[0] || 'Candidate'}</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
             Ready to prove your technical prowess?
           </p>

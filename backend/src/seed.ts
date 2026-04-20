@@ -117,7 +117,17 @@ async function seed() {
 
     await db.execute({
       sql: "INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
+      args: [generateId(), "Pranay Admin", "pranay@gmail.com", adminPassword, "ADMIN"]
+    });
+
+    await db.execute({
+      sql: "INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
       args: [generateId(), "Student User", "student@exampro.com", studentPassword, "STUDENT"]
+    });
+
+    await db.execute({
+      sql: "INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
+      args: [generateId(), "Sidhu Student", "sidhu@gmail.com", studentPassword, "STUDENT"]
     });
     
     // 1. Categories

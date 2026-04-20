@@ -23,8 +23,8 @@ export const Navbar = () => {
         
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
-          <div className="bg-white p-1 rounded-xl shadow-sm">
-            <img src="/logo.png" alt="ExamPro Logo" className="w-10 h-10 object-contain" />
+          <div className="w-10 h-10 bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center">
+            <img src="/logo.png" alt="ExamPro Logo" className="w-full h-full object-cover" />
           </div>
           <span className="text-white text-2xl font-bold tracking-tight">ExamPro</span>
         </Link>

@@ -84,11 +84,11 @@ export default function ExamAttempt() {
     
     setSubmitting(true);
     try {
-      const response = await studentApi.submitExam(examId as string, {
-        answers
+      const response = await studentApi.submitAttempt({
+        attempt_id: attemptId
       });
-      // Redirect to the instant result page using the resultId
-      router.push(`/student/results/${response.data.resultId}`);
+      // Redirect to the result page using the attemptId
+      router.push(`/student/results/${attemptId}`);
     } catch (err) {
       console.error(err);
       alert("Error submitting exam. Please check your connection.");
@@ -124,8 +124,8 @@ export default function ExamAttempt() {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-border px-8 py-3 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-4">
-           <div className="bg-white p-1 rounded-xl border border-slate-100 shadow-sm">
-              <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+           <div className="w-10 h-10 bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden flex items-center justify-center">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
            </div>
            <div>
               <h1 className="text-lg font-black font-heading text-slate-800 leading-tight">{examInfo?.title || "Exam in Progress"}</h1>
@@ -192,9 +192,9 @@ export default function ExamAttempt() {
               <button
                 key={q.id}
                 onClick={() => setCurrentIdx(idx)}
-                className={`w-12 h-12 rounded-xl font-bold transition-all duration-200 flex items-center justify-center relative ${
+                className={`w-11 h-11 rounded-lg font-bold transition-all duration-200 flex items-center justify-center relative ${
                   currentIdx === idx 
-                    ? "bg-brand-indigo text-white shadow-lg shadow-brand-indigo/30 scale-110 z-10" 
+                    ? "bg-brand-indigo text-white shadow-lg shadow-brand-indigo/30 scale-105 z-10" 
                     : answers[q.id] 
                       ? "bg-brand-emerald/10 text-brand-emerald border-2 border-brand-emerald/20" 
                       : "bg-slate-50 text-slate-400 border-2 border-transparent hover:border-slate-200"
@@ -233,7 +233,7 @@ export default function ExamAttempt() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl w-full mx-auto space-y-10"
+                className="max-w-4xl w-full mx-auto space-y-8"
               >
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -330,7 +330,6 @@ export default function ExamAttempt() {
                             fontFamily: "var(--font-roboto-mono), monospace",
                             padding: { top: 20 },
                             roundedSelection: true,
-                            backgroundColor: "#0f172a"
                           }}
                         />
                       </div>
@@ -345,9 +344,9 @@ export default function ExamAttempt() {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4">
+                    <div className="p-0">
                       <textarea
-                        className="w-full p-8 bg-slate-50 border-2 border-slate-100 rounded-[24px] focus:border-brand-indigo focus:bg-white outline-none transition-all text-xl font-body leading-relaxed min-h-[300px]"
+                        className="w-full p-6 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-indigo focus:bg-white outline-none transition-all text-lg font-body leading-relaxed min-h-[350px]"
                         placeholder="Type your comprehensive answer here..."
                         value={answers[currentQ.id] || ""}
                         onChange={(e) => setAnswers({ ...answers, [currentQ.id]: e.target.value })}

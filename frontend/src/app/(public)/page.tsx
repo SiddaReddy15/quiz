@@ -62,9 +62,9 @@ export default function Home() {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-border text-primary text-xs font-black uppercase tracking-widest mb-8 shadow-sm"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-indigo/5 border border-brand-indigo/10 text-brand-indigo text-[10px] font-black uppercase tracking-[0.2em] mb-8 shadow-sm"
               >
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <div className="w-2 h-2 rounded-full bg-brand-indigo animate-ping" />
                 The Future of Academic Assessments
               </motion.div>
               <motion.h1 
@@ -105,19 +105,23 @@ export default function Home() {
                     className="relative z-10 p-4 bg-surface rounded-[40px] shadow-soft border border-border"
                 >
                     <img 
-                        src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426&ixlib=rb-4.0.3" 
-                        alt="ExamPro Dashboard Preview" 
-                        className="rounded-[32px] w-full"
+                        src="/hero.png" 
+                        alt="Student writing exam on ExamPro" 
+                        className="rounded-[32px] w-full object-cover aspect-[16/10]"
                     />
                 </motion.div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 blur-[120px] rounded-full -z-10" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] bg-brand-indigo/10 blur-[120px] rounded-full -z-10 animate-pulse" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-purple/20 blur-[60px] rounded-full -z-10" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="pt-12 pb-12 bg-background/50">
+      <section id="features" className="pt-24 pb-24 bg-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-background to-transparent" />
+        <div className="absolute -left-20 top-40 w-80 h-80 bg-brand-indigo/5 blur-[100px] rounded-full" />
+        <div className="absolute -right-20 bottom-0 w-96 h-96 bg-brand-purple/5 blur-[120px] rounded-full" />
         <div className="container px-6 mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <h2 className="text-4xl lg:text-5xl font-heading font-black mb-6 text-textPrimary tracking-tighter uppercase">Engineered for Excellence</h2>
@@ -144,8 +148,9 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="pt-12 pb-32 overflow-hidden bg-background">
-        <div className="container px-6 mx-auto">
+      <section className="pt-24 pb-32 overflow-hidden bg-brand-indigo/[0.02] relative">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-purple/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="container px-6 mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-20">
             <div className="flex-1">
                 <h2 className="text-4xl lg:text-5xl font-heading font-black mb-12 text-textPrimary leading-[1.1]">How ExamPro <br /> Simplifies Everything</h2>
@@ -245,8 +250,8 @@ export default function Home() {
             <div className="flex flex-col lg:flex-row justify-between items-start gap-12 mb-20">
                 <div className="max-w-xs transition-all hover:translate-x-1">
                     <Link href="/" className="flex items-center gap-3 mb-6 group">
-                        <div className="bg-white p-1 rounded-lg group-hover:scale-110 transition-transform shadow-sm border border-slate-100">
-                            <img src="/logo.png" alt="ExamPro Logo" className="w-8 h-8 object-contain" />
+                        <div className="w-8 h-8 bg-white rounded-lg group-hover:scale-110 transition-transform shadow-sm border border-slate-100 overflow-hidden flex items-center justify-center">
+                            <img src="/logo.png" alt="ExamPro Logo" className="w-full h-full object-cover" />
                         </div>
                         <span className="text-xl font-heading font-black text-textPrimary tracking-tight">
                             ExamPro

@@ -84,8 +84,10 @@ export default function AvailableExams() {
                 <p className="text-slate-400 font-bold max-w-xs">Check back later for new technical challenges released by the administrators.</p>
             </div>
         ) : filteredExams?.map((exam: any, idx: number) => {
-            const isCompleted = exam.attempt_status === 'SUBMITTED';
+            const isSubmitted = exam.attempt_status === 'SUBMITTED';
             const isInProgress = exam.attempt_status === 'IN_PROGRESS';
+            const isTaken = isSubmitted || isInProgress;
+            const isCompleted = isTaken; 
             
             return (
                 <motion.div 
@@ -97,11 +99,10 @@ export default function AvailableExams() {
                 >
                     <div className="flex justify-between items-start mb-6">
                         <div className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${
-                            isCompleted ? "bg-brand-emerald/10 text-brand-emerald" : 
-                            isInProgress ? "bg-brand-orange/10 text-brand-orange" : "bg-brand-indigo/10 text-brand-indigo"
+                            isCompleted ? "bg-brand-emerald/10 text-brand-emerald" : "bg-brand-indigo/10 text-brand-indigo"
                         }`}>
-                            {isCompleted ? <CheckCircle2 size={12} /> : isInProgress ? <Clock size={12} /> : <Tag size={12} />}
-                            {isCompleted ? "Completed" : isInProgress ? "In Progress" : exam.category_name || "General"}
+                            {isCompleted ? <CheckCircle2 size={12} /> : <Tag size={12} />}
+                            {isCompleted ? "Completed" : exam.category_name || "General"}
                         </div>
                         {isCompleted && (
                             <div className="text-[10px] font-black text-brand-indigo bg-brand-indigo/5 px-3 py-1.5 rounded-xl">
@@ -135,25 +136,29 @@ export default function AvailableExams() {
                             Released: {new Date(exam.created_at).toLocaleDateString()}
                         </div>
                         
-                        {isCompleted ? (
-                            <button 
-                                onClick={() => router.push(`/student/result/${exam.attempt_id}`)}
-                                className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm"
-                            >
-                                View Report <ArrowRight size={14} />
-                            </button>
+                        {isTaken ? (
+                            <div className="flex items-center gap-4">
+                                {isSubmitted ? (
+                                    <button 
+                                        onClick={() => router.push(`/student/result/${exam.attempt_id}`)}
+                                        className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                                    >
+                                        View Report <ArrowRight size={14} />
+                                    </button>
+                                ) : (
+                                    <div className="px-6 py-3 bg-slate-50 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-100">
+                                        Attempt Recorded
+                                    </div>
+                                )}
+                            </div>
                         ) : (
                             <button 
                                 onClick={() => startMutation.mutate(exam.id)}
                                 disabled={startMutation.isPending}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg ${
-                                    isInProgress 
-                                        ? "bg-brand-orange text-white shadow-brand-orange/20" 
-                                        : "bg-brand-indigo text-white shadow-brand-indigo/20 hover:scale-105"
-                                }`}
+                                className="flex items-center gap-2 px-6 py-3 bg-brand-indigo text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-brand-indigo/20 hover:scale-105"
                             >
                                 {startMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <PlayCircle size={14} />}
-                                {isInProgress ? "Continue Assessment" : "Start Now"}
+                                Start Now
                             </button>
                         )}
                     </div>

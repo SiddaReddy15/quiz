@@ -24,8 +24,8 @@ export default function StudentSidebar() {
   return (
     <aside className="w-80 h-screen bg-white border-r border-slate-100 flex flex-col sticky top-0 font-body">
       <div className="p-10 flex items-center gap-4">
-        <div className="w-12 h-12 bg-primary-gradient rounded-2xl flex items-center justify-center text-white shadow-xl shadow-brand-indigo/20">
-          <GraduationCap size={28} />
+        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl shadow-brand-indigo/10 border border-slate-100 overflow-hidden">
+           <img src="/logo.png" alt="ExamPro Logo" className="w-full h-full object-cover" />
         </div>
         <div>
           <h1 className="text-2xl font-black font-heading tracking-tight">ExamPro</h1>
