@@ -9,6 +9,15 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 
+interface QuestionFormData {
+  type: string;
+  marks: number;
+  difficulty: string;
+  question_text: string;
+  options?: string;
+  correct_answer: string;
+}
+
 export default function ManageQuestions() {
   const { id: examId } = useParams();
   const queryClient = useQueryClient();
@@ -22,8 +31,15 @@ export default function ManageQuestions() {
     queryFn: () => adminApi.getQuestionsByExam(examId as string).then(res => res.data),
   });
 
-  const { register, handleSubmit, reset, watch } = useForm({
-    defaultValues: { type: "MCQ", marks: 1, difficulty: "MEDIUM" }
+  const { register, handleSubmit, reset, watch } = useForm<QuestionFormData>({
+    defaultValues: { 
+      type: "MCQ", 
+      marks: 1, 
+      difficulty: "MEDIUM",
+      question_text: "",
+      options: "",
+      correct_answer: ""
+    }
   });
   
   const questionType = watch("type");
