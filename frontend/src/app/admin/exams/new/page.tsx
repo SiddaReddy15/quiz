@@ -24,7 +24,11 @@ export default function NewExam() {
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(examSchema),
-    defaultValues: { duration: 60, passing_score: 40 },
+    defaultValues: { 
+      title: "",
+      duration: 60, 
+      passing_score: 40 
+    },
   });
 
   const onSubmit = async (data: any) => {
